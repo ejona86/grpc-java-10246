@@ -1,0 +1,37 @@
+plugins {
+    id 'application'
+    id 'com.google.protobuf' version '0.9.1'
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+def grpcVersion = '1.57.0-SNAPSHOT'
+def protobufVersion = '3.22.3'
+def protocVersion = protobufVersion
+
+dependencies {
+    implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+    implementation "io.grpc:grpc-services:${grpcVersion}"
+    implementation "io.grpc:grpc-stub:${grpcVersion}"
+    implementation "com.google.guava:guava:31.1-android"
+    implementation "io.grpc:grpc-netty:${grpcVersion}"
+    implementation "io.netty:netty-transport-native-epoll:4.1.87.Final:linux-x86_64"
+    compileOnly "org.apache.tomcat:annotations-api:6.0.53"
+}
+
+protobuf {
+    protoc { artifact = "com.google.protobuf:protoc:${protocVersion}" }
+    plugins {
+        grpc { artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}" }
+    }
+    generateProtoTasks {
+        all()*.plugins { grpc {} }
+    }
+}
+
+tasks.named('startScripts').configure {
+    mainClass = 'Main'
+}

@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+option java_outer_classname = "MyTestProto";
+
+message Request {
+  int32 value = 1;
+}
+
+message Response {}
+
+service MyTestService {
+  rpc MyTest(Request) returns (Response) {}
+}
