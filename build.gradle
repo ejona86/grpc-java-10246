@@ -19,6 +19,8 @@ dependencies {
     implementation "com.google.guava:guava:31.1-android"
     implementation "io.grpc:grpc-netty:${grpcVersion}"
     implementation "io.netty:netty-transport-native-epoll:4.1.87.Final:linux-x86_64"
+    implementation "io.netty:netty-transport-native-kqueue:4.1.87.Final:osx-aarch_64"
+    implementation "io.netty:netty-transport-native-kqueue:4.1.87.Final:osx-x86_64"
     compileOnly "org.apache.tomcat:annotations-api:6.0.53"
 }
 

@@ -5,14 +5,19 @@ import io.grpc.ServerBuilder;
 import io.grpc.StatusRuntimeException;
 import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
+import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollSocketChannel;
+import io.netty.channel.kqueue.KQueueEventLoopGroup;
+import io.netty.channel.kqueue.KQueueSocketChannel;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -32,14 +37,25 @@ public final class Main {
   }
 
   private static ManagedChannel buildChannel(String host, int port, boolean scheduledService) {
+    ThreadFactory threadFactory =
+        new ThreadFactoryBuilder().setNameFormat("io-event-loop-%s").setDaemon(true).build();
+    EventLoopGroup eventLoopGroup;
+    Class<? extends Channel> channelType;
 
-    EventLoopGroup eventLoopGroup = new EpollEventLoopGroup(1,
-        new ThreadFactoryBuilder().setNameFormat("io-event-loop-%s").setDaemon(true).build());
+    if (Epoll.isAvailable()) {
+      eventLoopGroup = new EpollEventLoopGroup(1, threadFactory);
+      channelType = EpollSocketChannel.class;
+    } else {
+      eventLoopGroup = new KQueueEventLoopGroup(1, threadFactory);
+      channelType = KQueueSocketChannel.class;
+    }
+
+    System.out.println("Using " + channelType);
 
     NettyChannelBuilder builder = NettyChannelBuilder
         .forAddress(host, port)
         .eventLoopGroup(eventLoopGroup)
-        .channelType(EpollSocketChannel.class)
+        .channelType(channelType)
         .defaultLoadBalancingPolicy("round_robin")
         // Doesn't matter, because we are using blocking stub
         //.executor(GrpcUtils.createExecutor("grpc-client-executor-", 50))
